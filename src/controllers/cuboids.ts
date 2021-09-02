@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import * as HttpStatus from 'http-status-codes';
 import { Id } from 'objection';
-import { Cuboid } from '../models';
+import { Cuboid, Bag } from '../models';
 
 export const list = async (req: Request, res: Response): Promise<Response> => {
   const ids = req.query.ids as Id[];
@@ -25,14 +25,26 @@ export const create = async (
   req: Request,
   res: Response
 ): Promise<Response> => {
-  const { width, height, depth, bagId } = req.body;
+  try {
+    const { width, height, depth, bagId } = req.body;
 
-  const cuboid = await Cuboid.query().insert({
-    width,
-    height,
-    depth,
-    bagId,
-  });
+    const bag = await Bag.query().findById(bagId).withGraphFetched('cuboids')
+    const volumeOfCuboidsOnBag = bag?.cuboids?.reduce((accumulator, cuboid) => accumulator += cuboid.width * cuboid.height * cuboid.depth, 0)
+    const volumeCurrentCuboid = width * height * depth
+    const totalVolume = volumeOfCuboidsOnBag && volumeOfCuboidsOnBag + volumeCurrentCuboid
 
-  return res.status(HttpStatus.CREATED).json(cuboid);
+    if (bag && totalVolume && totalVolume > bag?.volume)
+      return res.status(HttpStatus.UNPROCESSABLE_ENTITY).send({ message: 'Insufficient capacity in bag' })
+
+    const cuboid = await Cuboid.query().insert({
+      width,
+      height,
+      depth,
+      bagId,
+    });
+  
+    return res.status(HttpStatus.CREATED).json(cuboid);
+  } catch (error) {
+    return res.sendStatus(500)
+  }
 };
