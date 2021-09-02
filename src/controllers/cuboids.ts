@@ -92,6 +92,11 @@ export const remove = async (
 ): Promise<Response> => {
   try {
     const id: Id = req.params.id;
+    const cuboid = await Cuboid.query().findById(id)
+
+    if (!cuboid)
+      return res.sendStatus(HttpStatus.NOT_FOUND);
+
     await Cuboid.query().deleteById(id);
   
     return res.sendStatus(HttpStatus.OK);
