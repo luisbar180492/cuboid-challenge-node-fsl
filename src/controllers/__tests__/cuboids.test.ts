@@ -196,16 +196,15 @@ describe('cuboid update', () => {
     );
   });
 
-  it('should succeed to update the cuboid', () => {
-    const [newWidth, newHeight, newDepth] = [5, 5, 5];
-    const response = { body: {} as Cuboid, status: HttpStatus.OK };
-    cuboid = response.body;
+  it('should succeed to update the cuboid', async () => {
+    const [width, height, depth] = [1, 1, 1];
+    const response = await request(server).put(`/cuboids/${cuboid.id}`).send({ width, height, depth, bagId: bag.id });
 
     expect(response.status).toBe(HttpStatus.OK);
-    expect(cuboid.width).toBe(newWidth);
-    expect(cuboid.height).toBe(newHeight);
-    expect(cuboid.depth).toBe(newDepth);
-    expect(cuboid.bag?.id).toBe(bag.id);
+    expect(response.body.width).toBe(width);
+    expect(response.body.height).toBe(height);
+    expect(response.body.depth).toBe(depth);
+    expect(response.body.bagId).toBe(bag.id);
   });
 
   it('should fail to update if insufficient capacity and return 422 status code', () => {
