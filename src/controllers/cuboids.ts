@@ -19,7 +19,7 @@ export const get = async (req: Request, res: Response): Promise<Response> => {
   }
 
   return res.status(200).json(cuboid);
-}
+};
 
 export const create = async (
   req: Request,
@@ -29,16 +29,18 @@ export const create = async (
     const { width, height, depth, bagId } = req.body;
 
     const bag = await Bag.query().findById(bagId).withGraphFetched('cuboids');
-    if (!bag)
+    if (!bag) {
       return res.sendStatus(HttpStatus.NOT_FOUND);
+    }
 
     const volumeOfCuboidsOnBag = bag?.cuboids?.reduce((accumulator, cuboid) => accumulator += cuboid.width * cuboid.height * cuboid.depth, 0);
     const volumeCurrentCuboid = width * height * depth;
-    const totalVolume = volumeOfCuboidsOnBag && volumeOfCuboidsOnBag + volumeCurrentCuboid;
-    
+    const totalVolume = volumeOfCuboidsOnBag &&
+    volumeOfCuboidsOnBag + volumeCurrentCuboid;
 
-    if (bag && totalVolume && totalVolume > bag?.volume)
+    if (bag && totalVolume && totalVolume > bag?.volume) {
       return res.status(HttpStatus.UNPROCESSABLE_ENTITY).send({ message: 'Insufficient capacity in bag' });
+    }
 
     const cuboid = await Cuboid.query().insert({
       width,
@@ -49,7 +51,7 @@ export const create = async (
   
     return res.status(HttpStatus.CREATED).json(cuboid);
   } catch (error) {
-    return res.sendStatus(500)
+    return res.sendStatus(500);
   }
 };
 
@@ -62,16 +64,18 @@ export const update = async (
     const { width, height, depth, bagId } = req.body;
 
     const bag = await Bag.query().findById(bagId).withGraphFetched('cuboids');
-    if (!bag)
+    if (!bag) {
       return res.sendStatus(HttpStatus.NOT_FOUND);
+    }
 
     const volumeOfCuboidsOnBag = bag?.cuboids?.filter((cuboid) => cuboid.id !== id)
     .reduce((accumulator, cuboid) => accumulator += cuboid.width * cuboid.height * cuboid.depth, 0);
     const volumeCurrentCuboid = width * height * depth;
     const totalVolume = volumeOfCuboidsOnBag && volumeOfCuboidsOnBag + volumeCurrentCuboid;
     
-    if (bag && totalVolume && totalVolume > bag?.volume)
+    if (bag && totalVolume && totalVolume > bag?.volume) {
       return res.status(HttpStatus.UNPROCESSABLE_ENTITY).send({ message: 'Insufficient capacity in bag' });
+    }
 
     const cuboid = await Cuboid.query().updateAndFetchById(id, {
       width,
@@ -82,7 +86,7 @@ export const update = async (
   
     return res.status(HttpStatus.OK).json(cuboid);
   } catch (error) {
-    return res.sendStatus(500)
+    return res.sendStatus(500);
   }
 };
 
@@ -92,15 +96,16 @@ export const remove = async (
 ): Promise<Response> => {
   try {
     const id: Id = req.params.id;
-    const cuboid = await Cuboid.query().findById(id)
+    const cuboid = await Cuboid.query().findById(id);
 
-    if (!cuboid)
+    if (!cuboid) {
       return res.sendStatus(HttpStatus.NOT_FOUND);
+    }
 
     await Cuboid.query().deleteById(id);
   
     return res.sendStatus(HttpStatus.OK);
   } catch (error) {
-    return res.sendStatus(500)
+    return res.sendStatus(500);
   }
 };
