@@ -52,6 +52,8 @@ describe.each([
       volume,
       title,
       cuboids,
+      payloadVolume,
+      availableVolume,
     });
   });
 
