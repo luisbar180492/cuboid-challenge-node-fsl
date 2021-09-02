@@ -8,6 +8,7 @@ export const up = (knex: Knex): Promise<void> =>
     table.integer('width');
     table.integer('height');
     table.integer('depth');
+    table.integer('volume');
     table.integer('bagId');
     table.foreign('bagId').references('id').inTable(Bag.tableName);
   });
