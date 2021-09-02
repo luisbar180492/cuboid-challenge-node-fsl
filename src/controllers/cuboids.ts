@@ -10,8 +10,16 @@ export const list = async (req: Request, res: Response): Promise<Response> => {
   return res.status(200).json(cuboids);
 };
 
-export const get = async (req: Request, res: Response): Promise<Response> =>
-  res.sendStatus(200);
+export const get = async (req: Request, res: Response): Promise<Response> => {
+  const id: Id = req.params.id;
+  const cuboid = await Cuboid.query().findById(id);
+
+  if (!cuboid) {
+    return res.sendStatus(HttpStatus.NOT_FOUND);
+  }
+
+  return res.status(200).json(cuboid);
+}
 
 export const create = async (
   req: Request,
