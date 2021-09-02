@@ -52,3 +52,36 @@ export const create = async (
     return res.sendStatus(500)
   }
 };
+
+export const update = async (
+  req: Request,
+  res: Response
+): Promise<Response> => {
+  try {
+    const id: Id = req.params.id;
+    const { width, height, depth, bagId } = req.body;
+
+    const bag = await Bag.query().findById(bagId).withGraphFetched('cuboids');
+    if (!bag)
+      return res.sendStatus(HttpStatus.NOT_FOUND);
+
+    const volumeOfCuboidsOnBag = bag?.cuboids?.filter((cuboid) => cuboid.id !== id)
+    .reduce((accumulator, cuboid) => accumulator += cuboid.width * cuboid.height * cuboid.depth, 0);
+    const volumeCurrentCuboid = width * height * depth;
+    const totalVolume = volumeOfCuboidsOnBag && volumeOfCuboidsOnBag + volumeCurrentCuboid;
+    
+    if (bag && totalVolume && totalVolume > bag?.volume)
+      return res.status(HttpStatus.UNPROCESSABLE_ENTITY).send({ message: 'Insufficient capacity in bag' });
+
+    const cuboid = await Cuboid.query().updateAndFetchById(id, {
+      width,
+      height,
+      depth,
+      bagId,
+    });
+  
+    return res.status(HttpStatus.OK).json(cuboid);
+  } catch (error) {
+    return res.sendStatus(500)
+  }
+};
