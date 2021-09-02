@@ -28,13 +28,17 @@ export const create = async (
   try {
     const { width, height, depth, bagId } = req.body;
 
-    const bag = await Bag.query().findById(bagId).withGraphFetched('cuboids')
-    const volumeOfCuboidsOnBag = bag?.cuboids?.reduce((accumulator, cuboid) => accumulator += cuboid.width * cuboid.height * cuboid.depth, 0)
-    const volumeCurrentCuboid = width * height * depth
-    const totalVolume = volumeOfCuboidsOnBag && volumeOfCuboidsOnBag + volumeCurrentCuboid
+    const bag = await Bag.query().findById(bagId).withGraphFetched('cuboids');
+    if (!bag)
+      return res.sendStatus(HttpStatus.NOT_FOUND);
+
+    const volumeOfCuboidsOnBag = bag?.cuboids?.reduce((accumulator, cuboid) => accumulator += cuboid.width * cuboid.height * cuboid.depth, 0);
+    const volumeCurrentCuboid = width * height * depth;
+    const totalVolume = volumeOfCuboidsOnBag && volumeOfCuboidsOnBag + volumeCurrentCuboid;
+    
 
     if (bag && totalVolume && totalVolume > bag?.volume)
-      return res.status(HttpStatus.UNPROCESSABLE_ENTITY).send({ message: 'Insufficient capacity in bag' })
+      return res.status(HttpStatus.UNPROCESSABLE_ENTITY).send({ message: 'Insufficient capacity in bag' });
 
     const cuboid = await Cuboid.query().insert({
       width,
